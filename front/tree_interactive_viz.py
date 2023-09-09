@@ -1,13 +1,15 @@
-import streamlit as st
-import pandas as pd
-import dash
-from dash import dcc
-from dash import html
-from dash.dependencies import Input, Output
-import networkx as nx
-import plotly.graph_objs as go
-from plotly.subplots import make_subplots
+import os
+import uuid
 
+import numpy as np
+import pandas as pd
+
+import streamlit as st
+import networkx as nx
+
+
+from src.visualizazation import create_graph_viz
+from src.generate_embegging import get_embedding
 
 # Создаем граф NetworkX
 data_G = {
@@ -18,20 +20,31 @@ data_G = {
     }
 }
 
-st.title("Мой голос")
+data_G_colors = {}
 
+for key, value in data_G.items():
+    data_G_colors[key] = 'rgb(0, 0, 255)'
+    for key_, value_ in value.items():
+        color_vector = np.random.randint(256, size=3)
+        data_G_colors[key_] = f'rgb({color_vector[0]}, {color_vector[1]}, {color_vector[2]})'
+        # data_G_colors[value_] = f'rgb({color_vector[0]}, {color_vector[1]}, {color_vector[2]})'
+
+print(data_G_colors)
 
 def create_graph(data, graph, parent=None, depth=0):
     for key, value in data.items():
-        graph.add_node(key, level=depth, name_1=key)
+        key_id = uuid.uuid4()
+        graph.add_node(key_id, level=depth, name_1=key, color=data_G_colors[key])
         if parent is not None:
-            graph.add_edge(parent, key)
+            graph.add_edge(parent, key_id)
         if isinstance(value, dict):
-            create_graph(value, graph, parent=key, depth=depth + 1)
+            create_graph(value, graph, parent=key_id, depth=depth + 1)
         elif isinstance(value, list):
             for item in value:
-                graph.add_node(item, level=depth + 1, name_1=item)
-                graph.add_edge(key, item)
+                item_id = uuid.uuid4()
+                print(item, key, data_G_colors[key])
+                graph.add_node(item_id, level=depth + 1, name_1=item, color=data_G_colors[key])
+                graph.add_edge(key_id, item_id)
 
 
 # Создаем граф
@@ -41,13 +54,6 @@ create_graph(data_G, G)
 # Создаем Dash-приложение
 
 
-def get_node_size(level):
-    if level == 0:
-        return 50
-    elif level == 1:
-        return 35
-    else:
-        return 15
 
 
 # Определяем макет Dash-приложения
@@ -78,76 +84,12 @@ st.markdown(
 
 
 # Определяем функцию для создания графической визуализации
-def create_graph_viz():
-    # Получаем позиции узлов для отображения
-    pos = nx.spring_layout(G)
-
-    # Создаем список узлов и ребер для отрисовки
-    node_trace = go.Scatter(
-        x=[],
-        y=[],
-        text=[],
-        mode="markers",  # Обратите внимание на режим markers+text
-        hoverinfo="text",
-        # marker=dict(
-        #     showscale=True,
-        #     colorscale='YlGnBu',
-        #     size=10,
-        #     # colorbar=dict(
-        #     #     thickness=15,
-        #     #     title='Связи узла',
-        #     #     xanchor='left',
-        #     #     titleside='right'
-        #     # ),
-        #     line=dict(width=2)
-        # ),
-        textfont=dict(size=10, color="black"),  # Настройка стиля текста
-    )
-
-    node_trace["marker"]["size"] = []
-
-    edge_trace = go.Scatter(
-        x=[], y=[], line=dict(width=0.5, color="#888"), hoverinfo="none", mode="lines"
-    )
-
-    for node in G.nodes():
-        x, y = pos[node]
-        node_trace["x"] += (x,)
-        node_trace["y"] += (y,)
-        # node_info = f'Узел {node}<br>Связи: {len(G.edges(node))}'
-        # node_info = f'{node}'
-        node_trace["text"] += (G.nodes[node]["name_1"],)
-        node_trace["marker"]["size"] += (get_node_size(G.nodes[node]["level"]),)
-
-    for edge in G.edges():
-        x0, y0 = pos[edge[0]]
-        x1, y1 = pos[edge[1]]
-        edge_trace["x"] += (x0, x1, None)
-        edge_trace["y"] += (y0, y1, None)
-
-    # Создаем подзаголовок для визуализации
-    fig = make_subplots(rows=1, cols=1)
-    fig.add_trace(node_trace)
-    fig.add_trace(edge_trace)
-
-    # Настраиваем внешний вид визуализации
-    fig.update_layout(
-        showlegend=False,
-        hovermode="closest",
-        margin=dict(b=0, l=0, r=0, t=0),
-        xaxis=dict(showgrid=False, zeroline=False),
-        yaxis=dict(showgrid=False, zeroline=False),
-        plot_bgcolor="rgba(0,0,0,0)",  # Устанавливаем прозрачный фон
-    )
-
-    return fig
-
 
 # question = st.text_input("Введите интересующий вопрос")
 
 if st.button("Обновить граф"):
     # Создаем обратную связь для обновления графа по нажатию кнопки
-    fig = create_graph_viz()
+    fig = create_graph_viz(G)
     st.plotly_chart(fig)
 # Запускаем Dash-приложение на другом порту
 
@@ -155,17 +97,50 @@ questions = pd.read_csv("../data/all.csv")
 
 if "select_placeholder1" not in st.session_state:
     st.session_state.select_placeholder1 = ""
+if "select_placeholder2" not in st.session_state:
+    st.session_state.select_placeholder2 = ""
+if "G" not in st.session_state:
+    st.session_state.G = G
+
+def func_add_node(G, cluster, client_answer):
+    k_answer = uuid.uuid4()
+    G.add_node(k_answer, level=2, name_1=client_answer, color=G.nodes[cluster]['color'])
+    G.add_edge(cluster, k_answer)
+
+
+# def func_add_node(G, client_question_final, cluster, client_answer):
+#     k_cluster = uuid.uuid4()
+#     k_answer = uuid.uuid4()
+#     G.add_node(k_cluster, level=1, name_1=cluster, color='rgb(0, 0, 255)')
+#     G.add_node(k_answer, level=2, name_1=client_answer, color='rgb(0, 0, 255)')
+#     G.add_edge(k_cluster, k_answer)
+#     # поиск по полю name_1
+#     for node in G.nodes():
+#         if G.nodes[node]['name_1'] == client_question_final:
+#             G.add_edge(node, k_cluster)
 
 
 QUESTIONS = questions["question"].unique()
-client_question_new = st.text_input("Введите интересующий вопрос")
-with st.expander("Выбрать из уже существующих вопросов"):
+client_question = st.radio("Выбрать вопрос", [
+    "Добавить новый вопрос",
+    "Выбрать из уже существующих вопросов",
+])
+if client_question == "Выбрать из уже существующих вопросов":
     st.write("Существующие вопросы:")
-    client_question_exist = st.selectbox(
+    client_question_final = st.selectbox(
         label=st.session_state.select_placeholder1,
         key="question", options=QUESTIONS,
     )
-if st.button("Выбрать вопрос") and (client_question_new or client_question_exist):
-    question = client_question_new if client_question_new else client_question_exist
-    st.write("question", question)
+else:
+    client_question_final = st.text_input("Введите интересующий вопрос")
+
+if client_question_final:
+    client_answer = st.text_input("Введите ответ")
+    check = st.button("Добавить ответ")
+    if check and client_answer:
+        st.write("Вы добавили ответ:", client_answer)
+        # func_add_node(st.session_state.G, client_question_final, client_answer)
+    fig = create_graph_viz(st.session_state.G)
+    st.plotly_chart(fig)
     
+# print(get_embedding("Ты выспался?"))
