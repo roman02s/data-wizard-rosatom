@@ -32,21 +32,23 @@ def sbert_get_embeddings(texts):
     embs = np.asarray(mean_pooling(meta, tokens['attention_mask']).to("cpu"))
     return embs
 
-params = {
-    "model" : sbert_get_embeddings,
-    "clustering" : AffinityPropagation,
-    "clustering_params" : {
-        "random_state" : 1909,
-        "affinity" : "precomputed",
-    }
-}
+# params = {
+#     "id": 123,
+#     "question": "",
+#     "model" : sbert_get_embeddings,
+#     "clustering" : AffinityPropagation,
+#     "clustering_params" : {
+#         "random_state" : 1909,
+#         "affinity" : "precomputed",
+#     }
+# }
 
-test_ = AnswersClustering(params)
+# test_ = AnswersClustering(params)
 
-@lru_cache
-def get_embedding(answ):
+
+def get_embedding(test_, answ):
     test_.add_answer(answ, True)
     return test_.get_answers(), test_.get_clusters()
 
-def get_answers_clustering() -> AnswersClustering:
-    return test_
+def get_answers_clustering(**params) -> AnswersClustering:
+    return AnswersClustering(params)
