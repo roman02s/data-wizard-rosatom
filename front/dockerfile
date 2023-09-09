@@ -1,0 +1,14 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
+EXPOSE 8051
+
+COPY . .
+
+CMD ["python", "tree_interactive_viz.py"]
+
+# docker build -t front:v0 .
+# docker run -d --restart unless-stopped -p 8050:8051 front:v0
