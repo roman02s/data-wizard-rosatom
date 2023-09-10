@@ -1,6 +1,8 @@
-FROM python:3.11-slim
+FROM python:3.9-slim
 
 WORKDIR /app
+
+COPY requirements.txt .
 
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
@@ -8,7 +10,7 @@ EXPOSE 8051
 
 COPY . .
 
-CMD ["python", "tree_interactive_viz.py"]
+CMD ["streamlit", "run", "tree_interactive_viz.py"]
 
-# docker build -t front:v0 .
-# docker run -d --restart unless-stopped -p 8050:8051 front:v0
+# sudo docker build -t front:v0 .
+# sudo docker run -d --restart unless-stopped -v /home/roman/project/hack-digit-rosatom-my-voice:/app/data -p 8051:8051 front_cp2:v0

@@ -5,8 +5,6 @@ import numpy as np
 from sklearn.cluster import AffinityPropagation
 from transformers import AutoTokenizer, AutoModel
 
-from .answer_clustering import AnswersClustering
-
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #Load AutoModel from huggingface model repository
@@ -50,5 +48,5 @@ def get_embedding(test_, answ):
     test_.add_answer(answ, True)
     return test_.get_answers(), test_.get_clusters()
 
-def get_answers_clustering(**params) -> AnswersClustering:
-    return AnswersClustering(params)
+# def get_answers_clustering(**params) -> AnswersClustering:
+#     return AnswersClustering(params)

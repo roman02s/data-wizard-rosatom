@@ -14,7 +14,7 @@ def get_node_size(level):
 
 def create_graph_viz(G: nx.Graph):
     # Получаем позиции узлов для отображения
-    pos = nx.spring_layout(G)
+    pos = nx.circular_layout(G)
 
     # Создаем список узлов и ребер для отрисовки
     node_trace = go.Scatter(

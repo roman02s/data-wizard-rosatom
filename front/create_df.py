@@ -8,7 +8,7 @@ import streamlit as st
 import networkx as nx
 
 
-from src.create_graph import create_graph
+from src.create_graph import create_graph, graph_to_dataframe
 from src.visualizazation import create_graph_viz
 
 df = pd.read_csv("../data/result_df.csv")
@@ -24,5 +24,8 @@ for question in df["question"].unique():
     print(question)
     answers = df[df["question"] == question]["answer"]
     clusters = df[df["question"] == question]["cluster"]
-    print(create_graph(question, answers, clusters))
-    
+    G = create_graph(question, answers, clusters)
+    print(G)
+    df = graph_to_dataframe(G)
+    print(df)
+
