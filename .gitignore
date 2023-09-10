@@ -1,3 +1,6 @@
 .DS_Store
 .venv
 venv
+front/src/__pycache__
+front/__pycache__/
+front/model_for_summary.pth/

@@ -1,7 +1,18 @@
 import networkx as nx
+import pandas as pd
+import numpy as np
 
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
+
+
+questions = pd.read_csv("../data/all.csv")
+labeled = pd.read_csv("../data/labeled.csv")
+QUESTIONS = np.union1d(
+    questions["answer"].unique(),
+    labeled["answer"].unique(),
+)
+
 
 def get_node_size(level):
     if level == 0:
@@ -14,7 +25,7 @@ def get_node_size(level):
 
 def create_graph_viz(G: nx.Graph):
     # Получаем позиции узлов для отображения
-    pos = nx.circular_layout(G)
+    pos = nx.spring_layout(G)
 
     # Создаем список узлов и ребер для отрисовки
     node_trace = go.Scatter(
@@ -36,14 +47,20 @@ def create_graph_viz(G: nx.Graph):
         hoverinfo='none',
         mode='lines'
     )
-
     for node in G.nodes():
         x, y = pos[node]
         node_trace['x'] += (x,)
         node_trace['y'] += (y,)
         # node_info = f'Узел {node}<br>Связи: {len(G.edges(node))}'
-        # node_info = f'{node}'
-        node_trace['text'] += (G.nodes[node]['name_1'],)
+        node_info = G.nodes[node]["name_1"]
+        try:
+            if G.nodes[node]['level'] == 2:
+                if G.nodes[node]['name_1'] in questions["answer"].unique() or G.nodes[node]['name_1'] in labeled["answer"].unique():
+                    node_info = f'{G.nodes[node]["name_1"]}<br>Тональность: {questions[questions["answer"] == G.nodes[node]["name_1"]]["sentiment"].values[0]}'
+        except BaseException:
+            pass
+        print(node_info)
+        node_trace['text'] += (node_info,)
         node_trace['marker']['size'] += (get_node_size(G.nodes[node]['level']), )
         node_trace['marker']['color'] += (G.nodes[node]['color'],)
 

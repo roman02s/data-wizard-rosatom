@@ -80,7 +80,7 @@ def graph_to_dataframe(G):
     for node in G.nodes():
         if G.nodes[node]['level'] == 2:
             print("G.nodes[node]", G.nodes[node])
-            df = pd.concat([df, pd.DataFrame([{'question': quest, 'answer': G.nodes[node]['name_1'], 'sentiment': "neutrals"}])], ignore_index=True)
+            df = pd.concat([df, pd.DataFrame([{'question': quest, 'answer': G.nodes[node]['name_1'], 'cluster': node}])], ignore_index=True)
     return df
 
 

@@ -4,7 +4,7 @@ import pandas as pd
 from sklearn.metrics.pairwise import cosine_distances
 from sklearn.cluster import AffinityPropagation
 
-from generate_embegging import sbert_get_embeddings
+# from generate_embegging import sbert_get_embeddings
 
 NEED_RECALCULATE = [
     1, 2, 3, 4, 5, 7, 10, 15, 20, 25, 40, 50, 60, 80, 100, 125, 150, 200, 250, 400, 600, 800, 1000, 1500, 2000, 3000, 5000, 10000, 20000, 50000, 100000, 200000
